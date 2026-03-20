@@ -10,13 +10,15 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh "cd express-frontend && npm install"
+                // sh "cd express-frontend && npm install"
+                sh "cd ${WORKSPACE} && npm install"
             }
         }
 
         stage('Test') {
             steps {
-                sh "cd express-frontend && npm test || true"
+                // sh "cd express-frontend && npm test || true"
+                sh "cd ${WORKSPACE} && npm test || true"
             }
         }
 

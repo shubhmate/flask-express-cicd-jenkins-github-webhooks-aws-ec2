@@ -32,7 +32,7 @@ pipeline {
             steps {
                 sh """
                     pm2 delete flask-backend || true
-                    pm2 start ${VENV_DIR}/bin/python --name flask-backend -- ${WORKSPACE}/app.py
+                    pm2 start ${VENV_DIR}/bin/python -- ${WORKSPACE}/app.py --name flask-backend 
                     pm2 save
                 """
             }
