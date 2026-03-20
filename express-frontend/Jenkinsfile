@@ -1,10 +1,6 @@
 pipeline {
     agent any
 
-    environment {
-        APP_DIR  = "express-frontend"
-    }
-
     stages {
         stage('Checkout') {
             steps {
@@ -14,13 +10,13 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh "cd ${WORKSPACE}/${APP_DIR} && npm install"
+                sh "cd ${WORKSPACE}/express-frontend && npm install"
             }
         }
 
         stage('Test') {
             steps {
-                sh "cd ${WORKSPACE}/${APP_DIR} && npm test || true"
+                sh "cd ${WORKSPACE}/express-frontend && npm test || true"
             }
         }
 
@@ -28,7 +24,7 @@ pipeline {
             steps {
                 sh """
                     pm2 delete express-frontend || true
-                    pm2 start ${WORKSPACE}/${APP_DIR}/app.js --name express-frontend
+                    pm2 start ${WORKSPACE}/express-frontend/app.js --name express-frontend
                     pm2 save
                 """
             }
