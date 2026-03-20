@@ -1,6 +1,8 @@
-# CI/CD Deployment 
+# CI/CD Deployment
 
 Deploy a Flask backend (port 5000) and Express frontend (port 3000) on a single EC2 instance with a Jenkins CI/CD pipeline.
+
+> **GitHub Repository:** [flask-express-cicd-jenkins-github-webhooks-aws-ec2](https://github.com/shubhmate/flask-express-cicd-jenkins-github-webhooks-aws-ec2)
 
 ---
 
@@ -22,8 +24,7 @@ graph TD
     end
 
     subgraph GitHub ["🐙 GitHub"]
-        Repo1[flask-backend repo]
-        Repo2[express-frontend repo]
+        Repo1[flask-express-cicd-jenkins-github-webhooks-aws-ec2]
     end
 
     GitHub -->|Webhook on git push| Jenkins
@@ -35,7 +36,7 @@ graph TD
 
 ```mermaid
 flowchart LR
-    Dev([👨‍💻 Developer])-->|git push| GH[(GitHub Repo)]
+    Dev([👨💻 Developer])-->|git push| GH[(GitHub Repo)]
     GH -->|webhook trigger| J[⚙️ Jenkins]
     J --> S1["1️⃣ Checkout\ngit pull"]
     S1 --> S2["2️⃣ Install Deps\npip / npm install"]
@@ -185,10 +186,17 @@ sudo npm install -g pm2
 sudo apt install -y git
 ```
 
-### 4. Deploy Flask Backend
+### 4. Clone the Repository
 
 ```bash
-git clone https://github.com/<your-username>/flask-backend.git
+cd ~
+git clone https://github.com/shubhmate/flask-express-cicd-jenkins-github-webhooks-aws-ec2.git
+cd flask-express-cicd-jenkins-github-webhooks-aws-ec2
+```
+
+### 5. Deploy Flask Backend
+
+```bash
 cd flask-backend
 python3 -m venv venv
 source venv/bin/activate
@@ -201,12 +209,10 @@ pm2 save
 
 Verify: `curl http://<EC2_PUBLIC_IP>:5000/`
 
-### 5. Deploy Express Frontend
+### 6. Deploy Express Frontend
 
 ```bash
-cd ~
-git clone https://github.com/<your-username>/express-frontend.git
-cd express-frontend
+cd ~/flask-express-cicd-jenkins-github-webhooks-aws-ec2/express-frontend
 npm install
 
 pm2 start app.js --name express-frontend
@@ -215,7 +221,7 @@ pm2 save
 
 Verify: `curl http://<EC2_PUBLIC_IP>:3000/`
 
-### 6. Persist pm2 on Reboot
+### 7. Persist pm2 on Reboot
 
 ```bash
 pm2 startup
@@ -343,7 +349,7 @@ sudo systemctl restart jenkins
 
 ### Step 6: Create a Pipeline for Flask Backend
 
-This creates a Jenkins job that watches your `flask-backend` GitHub repo.
+This creates a Jenkins job that watches your repo and runs `flask-backend/Jenkinsfile`.
 
 1. On the Jenkins dashboard, click **New Item**
 2. Enter name: `flask-backend`
@@ -353,22 +359,31 @@ This creates a Jenkins job that watches your `flask-backend` GitHub repo.
    - Scroll to **Pipeline** section
    - Set **Definition** to `Pipeline script from SCM`
    - Set **SCM** to `Git`
-   - Enter your repo URL: `https://github.com/<your-username>/flask-backend.git`
+   - Enter repo URL: `https://github.com/shubhmate/flask-express-cicd-jenkins-github-webhooks-aws-ec2.git`
    - Set **Branch** to `*/main`
-   - Set **Script Path** to `Jenkinsfile`
+   - Set **Script Path** to `flask-backend/Jenkinsfile`
 5. Click **Save**
+
+> The Jenkinsfile uses `checkout scm` instead of a hardcoded repo URL. This means it reads the repo URL and branch directly from the Jenkins job configuration above — so if you ever change the repo URL in Jenkins, the Jenkinsfile doesn't need to be updated.
 
 ---
 
 ### Step 7: Create a Pipeline for Express Frontend
 
-Repeat the same steps as above for the Express app:
-
 1. Click **New Item**
 2. Enter name: `express-frontend`
 3. Select **Pipeline** → click **OK**
-4. Same configuration as Flask but with your `express-frontend` repo URL
+4. On the configuration page:
+   - Scroll to **Build Triggers** → tick **GitHub hook trigger for GITScm polling**
+   - Scroll to **Pipeline** section
+   - Set **Definition** to `Pipeline script from SCM`
+   - Set **SCM** to `Git`
+   - Enter repo URL: `https://github.com/shubhmate/flask-express-cicd-jenkins-github-webhooks-aws-ec2.git`
+   - Set **Branch** to `*/main`
+   - Set **Script Path** to `express-frontend/Jenkinsfile`
 5. Click **Save**
+
+> Same as Flask — `checkout scm` in the Jenkinsfile picks up the repo URL and branch from this job config automatically.
 
 ---
 
@@ -387,7 +402,7 @@ A webhook tells GitHub to notify Jenkins every time you push code, so the pipeli
 4. Click **Add webhook**
 5. GitHub will send a test ping — you should see a green tick ✅ next to the webhook
 
-> Repeat this for both repos (flask-backend and express-frontend).
+> Only one webhook needed — both pipelines are in the same repo.
 
 ---
 
@@ -535,15 +550,24 @@ Jenkins Webhook Trigger
 ## Repository Structure
 
 ```
-flask-backend/
-├── app.py
-├── requirements.txt
-└── Jenkinsfile
-
-express-frontend/
-├── app.js
-├── package.json
-└── Jenkinsfile
+flask-express-cicd-jenkins-github-webhooks-aws-ec2/
+├── .gitignore
+├── README.md
+├── flask-backend/
+│   ├── app.py
+│   ├── requirements.txt
+│   ├── .gitignore
+│   └── Jenkinsfile
+├── express-frontend/
+│   ├── app.js
+│   ├── package.json
+│   ├── .gitignore
+│   ├── templates/
+│   │   └── index.html
+│   └── Jenkinsfile
+└── screenshots/
+    ├── part1/
+    └── part2/
 ```
 
 ---
@@ -596,6 +620,84 @@ sudo apt install -y jenkins openjdk-17-jdk
 
 # Step 5: Start Jenkins
 sudo systemctl enable --now jenkins
+```
+
+---
+
+### ❌ Jenkins Service Failed to Start (exit-code)
+
+**Error:**
+```
+Active: failed (Result: exit-code)
+Process: ExecStart=/usr/bin/jenkins (code=exited, status=1/FAILURE)
+```
+
+**Cause:** Java not installed or wrong Java version. Jenkins requires Java 17.
+
+**Fix:**
+```bash
+# Check Java version
+java -version
+
+# Install Java 17
+sudo apt install -y openjdk-17-jdk
+
+# If multiple Java versions exist, set Java 17 as default
+sudo update-alternatives --config java
+# Type the number for Java 17 and press Enter
+
+# Check Jenkins logs for exact error
+sudo journalctl -u jenkins -n 50 --no-pager
+sudo cat /var/log/jenkins/jenkins.log | tail -50
+
+# Restart Jenkins
+sudo systemctl restart jenkins
+sudo systemctl status jenkins
+```
+
+---
+
+### ❌ Jenkins Cannot Find Jenkinsfile
+
+**Error:**
+```
+ERROR: Unable to find Jenkinsfile from git https://github.com/shubhmate/flask-express-cicd-jenkins-github-webhooks-aws-ec2
+Finished: FAILURE
+```
+
+**Cause:** Both Jenkinsfiles are inside subfolders, not at the repo root. Jenkins looks at root by default.
+
+**Fix:** Update the Script Path in each Jenkins job:
+
+1. Go to Jenkins → click the job → **Configure**
+2. Scroll to **Pipeline** section
+3. Change **Script Path**:
+   - For `flask-backend` job → `flask-backend/Jenkinsfile`
+   - For `express-frontend` job → `express-frontend/Jenkinsfile`
+4. Click **Save** and rebuild
+
+---
+
+### ❌ Error Fetching Remote Repo
+
+**Error:**
+```
+ERROR: Error fetching remote repo 'origin'
+Finished: FAILURE
+```
+
+**Cause:** Jenkins workspace has a stale or conflicting git state from a previous failed clone.
+
+**Fix:** Clean the Jenkins workspace and rebuild:
+
+1. Go to Jenkins → click the job → **Workspace** (left sidebar)
+2. Click **Wipe out current workspace**
+3. Click **Build Now** to trigger a fresh build
+
+If it still fails, verify the repo is reachable from EC2:
+```bash
+curl -I https://github.com/shubhmate/flask-express-cicd-jenkins-github-webhooks-aws-ec2
+# Should return: HTTP/2 200
 ```
 
 ---

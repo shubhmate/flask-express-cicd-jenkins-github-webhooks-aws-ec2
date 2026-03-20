@@ -8,7 +8,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/shubhmate/flask-express-cicd-jenkins-github-webhooks-aws-ec2.git'
+                checkout scm
             }
         }
 
