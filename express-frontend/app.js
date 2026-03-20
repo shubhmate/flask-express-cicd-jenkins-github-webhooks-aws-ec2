@@ -107,7 +107,6 @@ app.post("/submit", async (req, res) => {
       </html>
     `);
   }
-  }
 });
 
 app.get("/health", (req, res) => res.json({ status: "ok" }));
