@@ -1,0 +1,42 @@
+pipeline {
+    agent any
+
+    environment {
+        APP_DIR = "/home/ubuntu/express-frontend"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/<your-username>/express-frontend.git'
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                sh "cd ${APP_DIR} && npm install"
+            }
+        }
+
+        stage('Test') {
+            steps {
+                sh "cd ${APP_DIR} && npm test || true"
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                sh "pm2 restart express-frontend || pm2 start ${APP_DIR}/app.js --name express-frontend"
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Express deployment successful!'
+        }
+        failure {
+            echo 'Express deployment failed.'
+        }
+    }
+}

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Flask + Express</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 500px; margin: 60px auto; }
+    h2 { margin-bottom: 16px; }
+    input { display: block; width: 100%; padding: 8px 12px; margin: 6px 0; box-sizing: border-box; }
+    button { width: 100%; padding: 10px; margin-top: 10px; background: #007bff; color: #fff; border: none; cursor: pointer; border-radius: 4px; }
+    button:hover { background: #0056b3; }
+  </style>
+</head>
+<body>
+  <h2>Submit a Message to Flask</h2>
+  <form action="/submit" method="POST">
+    <input type="text" name="name" placeholder="Your name" required />
+    <input type="text" name="message" placeholder="Your message" required />
+    <button type="submit">Send to Flask</button>
+  </form>
+</body>
+</html>

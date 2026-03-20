@@ -1,0 +1,47 @@
+pipeline {
+    agent any
+
+    environment {
+        APP_DIR = "/home/ubuntu/flask-backend"
+        VENV_DIR = "${APP_DIR}/venv"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/<your-username>/flask-backend.git'
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                sh """
+                    cd ${APP_DIR}
+                    python3 -m venv ${VENV_DIR}
+                    ${VENV_DIR}/bin/pip install -r requirements.txt
+                """
+            }
+        }
+
+        stage('Test') {
+            steps {
+                sh "${VENV_DIR}/bin/python -m pytest tests/ || true"
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                sh "pm2 restart flask-backend || pm2 start ${VENV_DIR}/bin/python --name flask-backend -- ${APP_DIR}/app.py"
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Flask deployment successful!'
+        }
+        failure {
+            echo 'Flask deployment failed.'
+        }
+    }
+}

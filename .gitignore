@@ -1,0 +1,16 @@
+# ── Flask Backend ──────────────────────────────────────────
+# Python virtual environment (created by: python -m venv venv)
+flask-backend/venv/
+# Python compiled bytecode
+flask-backend/__pycache__/
+flask-backend/*.pyc
+
+# ── Express Frontend ─────────────────────────────────────────
+# Node.js dependencies (installed by: npm install)
+express-frontend/node_modules/
+
+# ── Common ───────────────────────────────────────────────────
+# Environment variables (API keys, secrets — never commit these)
+.env
+# AWS SSH key pair — never commit your private key
+*.pem
