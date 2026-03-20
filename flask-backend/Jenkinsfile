@@ -32,9 +32,9 @@ pipeline {
         stage('Deploy') {
             steps {
                 sh """
-                    pm2 delete flask-backend || true
-                    pm2 start ${VENV_DIR}/bin/python --name flask-backend -- ${WORKSPACE}/flask-backend/app.py
-                    pm2 save
+                    sudo -u ubuntu pm2 delete flask-backend || true
+                    sudo -u ubuntu pm2 start ${VENV_DIR}/bin/python --name flask-backend -- ${WORKSPACE}/flask-backend/app.py
+                    sudo -u ubuntu pm2 save
                 """
             }
         }

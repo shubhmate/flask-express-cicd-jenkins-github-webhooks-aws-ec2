@@ -24,9 +24,9 @@ pipeline {
         stage('Deploy') {
             steps {
                 sh """
-                    pm2 delete express-frontend || true
-                    pm2 start ${WORKSPACE}/express-frontend/app.js --name express-frontend
-                    pm2 save
+                    sudo -u ubuntu pm2 delete express-frontend || true
+                    sudo -u ubuntu pm2 start ${WORKSPACE}/express-frontend/app.js --name express-frontend
+                    sudo -u ubuntu pm2 save
                 """
             }
         }
