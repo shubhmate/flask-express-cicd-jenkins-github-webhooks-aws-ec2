@@ -239,11 +239,12 @@ SSH into your EC2 instance and run the following commands one by one:
 ```bash
 # Add Jenkins GPG key so apt trusts the Jenkins package
 sudo wget -O /usr/share/keyrings/jenkins-keyring.asc \
-  https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key
+  https://pkg.jenkins.io/debian-stable/jenkins.io-2026.key
 
 # Add Jenkins to apt sources list
 echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
-  https://pkg.jenkins.io/debian-stable binary/" | sudo tee /etc/apt/sources.list.d/jenkins.list
+  https://pkg.jenkins.io/debian-stable binary/" | sudo tee \
+  /etc/apt/sources.list.d/jenkins.list > /dev/null
 
 # Update apt and install Jenkins + Java (Jenkins requires Java to run)
 sudo apt update
@@ -556,3 +557,83 @@ express-frontend/
 | Jenkins  | `http://<EC2_PUBLIC_IP>:8080/`   |
 
 Check running processes: `pm2 list`
+
+---
+
+## Troubleshooting
+
+### ❌ Jenkins GPG Key Error
+
+**Error:**
+```
+W: GPG error: https://pkg.jenkins.io/debian-stable binary/ Release:
+   The following signatures couldn't be verified because the public key
+   is not available: NO_PUBKEY 7198F4B714ABFC68
+E: The repository 'https://pkg.jenkins.io/debian-stable binary/ Release' is not signed.
+```
+
+**Cause:** The old key URL `jenkins.io-2023.key` is expired/invalid. Jenkins updated their GPG key.
+
+**Fix:** Use the updated `jenkins.io-2026.key` URL:
+
+```bash
+# Step 1: Remove old broken key and repo entry
+sudo rm -f /usr/share/keyrings/jenkins-keyring.asc
+sudo rm -f /etc/apt/sources.list.d/jenkins.list
+
+# Step 2: Download the updated key
+sudo wget -O /usr/share/keyrings/jenkins-keyring.asc \
+  https://pkg.jenkins.io/debian-stable/jenkins.io-2026.key
+
+# Step 3: Add the Jenkins repository
+echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
+  https://pkg.jenkins.io/debian-stable binary/" | sudo tee \
+  /etc/apt/sources.list.d/jenkins.list > /dev/null
+
+# Step 4: Update and install
+sudo apt update
+sudo apt install -y jenkins openjdk-17-jdk
+
+# Step 5: Start Jenkins
+sudo systemctl enable --now jenkins
+```
+
+---
+
+### ❌ Jenkins Not Accessible on Port 8080
+
+**Cause:** Jenkins service not running or port 8080 not open in EC2 security group.
+
+**Fix:**
+```bash
+# Check if Jenkins is running
+sudo systemctl status jenkins
+
+# If not running, start it
+sudo systemctl start jenkins
+
+# Check if port 8080 is listening
+sudo ss -tlnp | grep 8080
+```
+Also verify port `8080` is added to your EC2 Security Group inbound rules.
+
+---
+
+### ❌ pm2 Command Not Found in Jenkins Pipeline
+
+**Cause:** Jenkins runs as the `jenkins` user which doesn't have pm2 in its PATH.
+
+**Fix:**
+```bash
+# Find where pm2 is installed
+which pm2
+
+# Use the full path in your Jenkinsfile, e.g:
+# /usr/bin/pm2 restart flask-backend
+
+# Or add jenkins to ubuntu group and allow sudo
+sudo usermod -aG ubuntu jenkins
+sudo visudo
+# Add: jenkins ALL=(ALL) NOPASSWD: /usr/bin/pm2
+sudo systemctl restart jenkins
+```

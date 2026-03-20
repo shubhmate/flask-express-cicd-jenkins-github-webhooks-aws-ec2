@@ -2,13 +2,16 @@ pipeline {
     agent any
 
     environment {
-        APP_DIR = "/home/ubuntu/express-frontend"
+        REPO_DIR = "/home/ubuntu/flask-express-cicd-jenkins-github-webhooks-aws-ec2"
+        APP_DIR  = "${REPO_DIR}/express-frontend"
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/<your-username>/express-frontend.git'
+                dir("${REPO_DIR}") {
+                    git branch: 'main', url: 'https://github.com/shubhmate/flask-express-cicd-jenkins-github-webhooks-aws-ec2.git'
+                }
             }
         }
 
