@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        VENV_DIR = "${WORKSPACE}/flask-backend/venv"
+        VENV_DIR = "${WORKSPACE}/venv"
     }
 
     stages {
@@ -32,7 +32,7 @@ pipeline {
             steps {
                 sh """
                     pm2 delete flask-backend || true
-                    pm2 start ${VENV_DIR}/bin/python --name flask-backend -- ${WORKSPACE}/flask-backend/app.py
+                    pm2 start ${VENV_DIR}/bin/python --name flask-backend -- ${WORKSPACE}/app.py
                     pm2 save
                 """
             }

@@ -24,7 +24,7 @@ pipeline {
             steps {
                 sh """
                     pm2 delete express-frontend || true
-                    pm2 start ${WORKSPACE}/express-frontend/app.js --name express-frontend
+                    pm2 start ${WORKSPACE}/app.js --name express-frontend
                     pm2 save
                 """
             }
