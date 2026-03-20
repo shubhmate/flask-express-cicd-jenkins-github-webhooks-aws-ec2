@@ -7,6 +7,17 @@ const FLASK_URL = "http://localhost:5000";
 
 app.use(express.urlencoded({ extended: true }));
 
+// CSRF defense: SameSite cookie + check Origin/Referer header on POST
+app.use((req, res, next) => {
+  if (req.method === "POST") {
+    const origin = req.headers.origin || req.headers.referer || "";
+    if (!origin.includes(`localhost:${PORT}`) && !origin.includes(req.headers.host)) {
+      return res.status(403).send("Forbidden: invalid request origin");
+    }
+  }
+  next();
+});
+
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "templates", "index.html"));
 });
