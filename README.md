@@ -325,7 +325,7 @@ By default, Jenkins runs as its own system user (`jenkins`) and cannot run `pm2`
 sudo usermod -aG ubuntu jenkins
 ```
 
-Now give Jenkins permission to run pm2 without a password prompt:
+Now give Jenkins permission to run pm2 as the ubuntu user without a password prompt:
 
 ```bash
 # Open the sudoers file safely
@@ -335,8 +335,10 @@ sudo visudo
 Scroll to the bottom of the file and add this line:
 
 ```
-jenkins ALL=(ALL) NOPASSWD: /usr/bin/pm2
+jenkins ALL=(ubuntu) NOPASSWD: /usr/bin/pm2
 ```
+
+> Note: `(ubuntu)` means Jenkins can run pm2 **as** the ubuntu user via `sudo -u ubuntu pm2`. This keeps apps running under ubuntu's pm2 daemon (accessible publicly) rather than Jenkins' own isolated pm2 daemon.
 
 Save and exit (`Ctrl+X` → `Y` → `Enter` if using nano).
 
@@ -731,11 +733,191 @@ Also verify port `8080` is added to your EC2 Security Group inbound rules.
 which pm2
 
 # Use the full path in your Jenkinsfile, e.g:
-# /usr/bin/pm2 restart flask-backend
+# sudo -u ubuntu /usr/bin/pm2 restart flask-backend
 
-# Or add jenkins to ubuntu group and allow sudo
+# Add jenkins to ubuntu group and allow sudo
 sudo usermod -aG ubuntu jenkins
 sudo visudo
-# Add: jenkins ALL=(ALL) NOPASSWD: /usr/bin/pm2
+# Add: jenkins ALL=(ubuntu) NOPASSWD: /usr/bin/pm2
 sudo systemctl restart jenkins
+```
+
+---
+
+### ❌ pm2 Apps Running Under Wrong User (Jenkins pm2 Daemon)
+
+**Symptom:** Jenkins pipeline succeeds and `pm2 list` inside the pipeline shows apps online, but `pm2 list` as the `ubuntu` user shows nothing, and the app is not accessible in the browser.
+
+**Cause:** Jenkins runs as the `jenkins` user, which has its own separate pm2 daemon at `/var/lib/jenkins/.pm2`. Apps started by Jenkins are invisible to the `ubuntu` user's pm2 daemon and may not bind to the correct network interface.
+
+**Fix:** Use `sudo -u ubuntu pm2` in your Jenkinsfile so apps are managed under ubuntu's pm2 daemon:
+
+```groovy
+// In Jenkinsfile Deploy stage
+sh 'sudo -u ubuntu pm2 restart flask-backend || sudo -u ubuntu pm2 start ${WORKSPACE}/flask-backend/venv/bin/python --name flask-backend -- ${WORKSPACE}/flask-backend/app.py'
+sh 'sudo -u ubuntu pm2 save'
+```
+
+And ensure the sudoers entry uses `(ubuntu)` not `(ALL)`:
+```
+jenkins ALL=(ubuntu) NOPASSWD: /usr/bin/pm2
+```
+
+---
+
+### ❌ Double Subfolder Path in Jenkins Workspace
+
+**Error:**
+```
+cd: flask-backend/flask-backend: No such file or directory
+```
+
+**Cause:** After `checkout scm`, the repo contents are placed directly inside `WORKSPACE` — not inside a subfolder named after the repo. So the path is `${WORKSPACE}/flask-backend/`, not `${WORKSPACE}/flask-express-.../flask-backend/`.
+
+**Fix:** Use `dir()` blocks in your Jenkinsfile instead of `cd` commands:
+
+```groovy
+stage('Install Dependencies') {
+    steps {
+        dir('flask-backend') {
+            sh 'python3 -m venv venv && venv/bin/pip install -r requirements.txt'
+        }
+    }
+}
+```
+
+Or verify the workspace structure:
+```bash
+# On EC2, check what's inside the Jenkins workspace
+ls /var/lib/jenkins/workspace/flask-backend/
+# Should show: flask-backend/  express-frontend/  README.md  etc.
+```
+
+---
+
+### ❌ Jenkins Out of Memory / Freezing on t2.micro
+
+**Symptom:** Jenkins UI is very slow, builds hang, or EC2 becomes unresponsive.
+
+**Cause:** t2.micro has only 1GB RAM. Jenkins default JVM heap is too large.
+
+**Fix:** Limit Jenkins JVM memory and add swap:
+
+```bash
+# Step 1: Limit Jenkins heap size
+sudo nano /etc/default/jenkins
+# Add or update this line:
+JAVA_ARGS="-Xms128m -Xmx256m -XX:+UseG1GC -XX:MaxMetaspaceSize=128m"
+
+# Step 2: Add 1GB swap file
+sudo fallocate -l 1G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+
+# Make swap permanent across reboots
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+
+# Step 3: Restart Jenkins
+sudo systemctl restart jenkins
+```
+
+---
+
+### ❌ Jenkinsfile Script Path Wrong After Repo Restructure
+
+**Error:**
+```
+ERROR: Unable to find Jenkinsfile from git ...
+Finished: FAILURE
+```
+
+**Cause:** The Script Path in the Jenkins job config doesn't match where the Jenkinsfile actually lives in the repo.
+
+**Fix:** Double-check the Script Path for each job:
+
+| Job | Script Path |
+|-----|-------------|
+| `flask-backend` | `flask-backend/Jenkinsfile` |
+| `express-frontend` | `express-frontend/Jenkinsfile` |
+
+To update: Jenkins → job → **Configure** → **Pipeline** section → **Script Path** → **Save**.
+
+---
+
+### ❌ Syntax Error in app.js Causing Express Crash
+
+**Symptom:** Express app fails to start or pm2 shows status `errored`.
+
+**Cause:** A stray `}` brace or other syntax error in `app.js`.
+
+**Fix:** Check pm2 logs to find the exact error:
+
+```bash
+pm2 logs express-frontend --lines 50
+```
+
+Then validate the syntax locally:
+```bash
+node --check app.js
+# No output = syntax is valid
+```
+
+Fix the offending line, push to GitHub, and let Jenkins redeploy.
+
+---
+
+### ❌ GitHub Webhook Not Triggering Jenkins Build
+
+**Symptom:** You push to GitHub but Jenkins does not start a build automatically.
+
+**Cause:** Webhook misconfigured, Jenkins URL wrong, or EC2 security group blocking GitHub's IPs.
+
+**Fix:**
+
+1. Check webhook delivery in GitHub → Repo → **Settings** → **Webhooks** → click the webhook → **Recent Deliveries**. A red ❌ means delivery failed — check the response body for clues.
+
+2. Verify the Payload URL is exactly:
+   ```
+   http://<EC2_PUBLIC_IP>:8080/github-webhook/
+   ```
+   The trailing slash is required.
+
+3. Confirm the Jenkins job has **GitHub hook trigger for GITScm polling** ticked under **Build Triggers**.
+
+4. Verify port `8080` is open in your EC2 Security Group inbound rules.
+
+5. Re-deliver the webhook manually: GitHub → Webhooks → Recent Deliveries → click a delivery → **Redeliver**.
+
+---
+
+### ❌ Flask App Not Accessible After Jenkins Deploy
+
+**Symptom:** Jenkins pipeline succeeds but `curl http://<EC2_PUBLIC_IP>:5000/` times out or refuses connection.
+
+**Cause:** Flask is bound to `127.0.0.1` (localhost only) instead of `0.0.0.0` (all interfaces).
+
+**Fix:** Set the `FLASK_HOST` environment variable before starting with pm2:
+
+```bash
+# Check current Flask binding
+pm2 logs flask-backend --lines 20
+# Look for: Running on http://127.0.0.1:5000  ← wrong
+# Should be: Running on http://0.0.0.0:5000   ← correct
+
+# Restart with correct host
+sudo -u ubuntu pm2 delete flask-backend
+sudo -u ubuntu FLASK_HOST=0.0.0.0 pm2 start venv/bin/python --name flask-backend -- app.py
+sudo -u ubuntu pm2 save
+```
+
+Or set it in the Jenkinsfile deploy stage:
+```groovy
+sh 'sudo -u ubuntu pm2 restart flask-backend --update-env'
+```
+
+And ensure `app.py` reads the env var:
+```python
+host = os.environ.get('FLASK_HOST', '0.0.0.0')
+app.run(host=host, port=5000)
 ```
