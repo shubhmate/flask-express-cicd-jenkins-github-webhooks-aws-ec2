@@ -14,13 +14,13 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh "cd ${APP_DIR} && npm install"
+                sh "cd ${WORKSPACE}/${APP_DIR} && npm install"
             }
         }
 
         stage('Test') {
             steps {
-                sh "cd ${APP_DIR} && npm test || true"
+                sh "cd ${WORKSPACE}/${APP_DIR} && npm test || true"
             }
         }
 
@@ -28,7 +28,7 @@ pipeline {
             steps {
                 sh """
                     pm2 delete express-frontend || true
-                    pm2 start ${APP_DIR}/app.js --name express-frontend
+                    pm2 start ${WORKSPACE}/${APP_DIR}/app.js --name express-frontend
                     pm2 save
                 """
             }
