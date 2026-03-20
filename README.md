@@ -441,50 +441,57 @@ Now try the full automation — make a small change to your code, push to GitHub
 
 #### 1. EC2 Instance Running
 > AWS Console → EC2 → Instances → Instance State: **Running**
-
-![EC2 Instance Running](screenshots/part1/01-ec2-running.png)
+<div align="center" >
+    <img width="1163" height="132" alt="image" src="https://github.com/user-attachments/assets/3d481ca7-3b00-4221-9dc0-99bade6e1a81" />
+</div>
 
 ---
 
 #### 2. Security Group Inbound Rules
 > AWS Console → EC2 → Security Groups → Inbound rules showing ports `22`, `3000`, `5000`, `8080`
-
-![Security Group](screenshots/part1/02-security-group.png)
+<div align="center">
+    <img width="1325" height="246" alt="image" src="https://github.com/user-attachments/assets/969f5a5d-63a0-40a5-8bee-bdcd40bbff92" />
+</div>
 
 ---
 
 #### 3. SSH Connected to EC2
 > Your terminal showing `ubuntu@ip-...` after SSH login
-
-![SSH Connected](screenshots/part1/03-ssh-connected.png)
+<div align="center">
+    <img width="651" height="573" alt="image" src="https://github.com/user-attachments/assets/f802014f-e258-413b-8c7d-80524a838a18" />
+</div>
 
 ---
 
 #### 4. pm2 List — Both Apps Online
 > Run `pm2 list` in EC2 terminal — both `flask-backend` and `express-frontend` should show **online**
-
-![pm2 list](screenshots/part1/04-pm2-list.png)
+<div align="center">
+    <img width="1307" height="99" alt="image" src="https://github.com/user-attachments/assets/6dd3d3f5-4ffe-4b07-a1d3-d5a3276f488a" />
+</div>
 
 ---
 
 #### 5. Flask Response in Browser
 > Open `http://<EC2_PUBLIC_IP>:5000/` in browser
-
-![Flask Browser](screenshots/part1/05-flask-browser.png)
+<div align="center">
+    <img width="332" height="99" alt="image"  src="https://github.com/user-attachments/assets/6f82859e-3c10-49ed-ad79-c9959cba4714" />
+</div>
 
 ---
 
 #### 6. Express Form in Browser
 > Open `http://<EC2_PUBLIC_IP>:3000/` in browser
-
-![Express Form](screenshots/part1/06-express-form.png)
+<div align="center">
+    <img width="1079" height="747" alt="image" src="https://github.com/user-attachments/assets/f91887df-e87c-43b6-af64-77fdd023aa56" />
+</div>
 
 ---
 
 #### 7. Form Submitted — Flask Response Displayed
 > Fill in the form and submit — Flask response should appear on screen
-
-![Form Submitted](screenshots/part1/07-form-submitted.png)
+<div align="center">
+    <img width="1082" height="719" alt="image" src="https://github.com/user-attachments/assets/5c17c50f-f4df-4901-8691-83bcf09556b2" />
+</div>
 
 ---
 
@@ -492,44 +499,42 @@ Now try the full automation — make a small change to your code, push to GitHub
 
 #### 8. Jenkins Dashboard — Both Pipeline Jobs
 > Open `http://<EC2_PUBLIC_IP>:8080` — both `flask-backend` and `express-frontend` jobs visible
-
-![Jenkins Dashboard](screenshots/part2/08-jenkins-dashboard.png)
+<div align="center">
+    <img width="1894" height="334" alt="image" src="https://github.com/user-attachments/assets/eae8621a-6597-4e34-bc56-5b1938f806a0" />
+</div>
 
 ---
 
 #### 9. Flask Backend Pipeline — All Stages Green
 > Jenkins → flask-backend job → Stage View showing all 4 stages passed ✅
-
-![Flask Pipeline](screenshots/part2/09-flask-pipeline-green.png)
+<div align="center">
+    <img width="905" height="242" alt="image" src="https://github.com/user-attachments/assets/997e9fb0-7959-4591-9c18-2d38d823be05" />
+</div>
 
 ---
 
 #### 10. Express Frontend Pipeline — All Stages Green
 > Jenkins → express-frontend job → Stage View showing all 4 stages passed ✅
-
-![Express Pipeline](screenshots/part2/10-express-pipeline-green.png)
+<div align="center">
+    <img width="909" height="246" alt="image" src="https://github.com/user-attachments/assets/a25424e4-2e96-43ff-a906-899572d4cbdd" />
+</div>
 
 ---
 
 #### 11. Console Output — Finished: SUCCESS
 > Jenkins → any build → Console Output → scroll to bottom showing `Finished: SUCCESS`
-
-![Console Output](screenshots/part2/11-console-output.png)
+<div align="center">
+    <img width="234" height="255" alt="image" src="https://github.com/user-attachments/assets/13d8161e-af9f-4b9c-9db0-cc5c2c0b6df8" />
+    <img width="239" height="204" alt="image" src="https://github.com/user-attachments/assets/c06f4588-08ed-4f89-899f-520133fe4e46" />
+</div>
 
 ---
 
 #### 12. GitHub Webhook — Green Tick
 > GitHub → Repo Settings → Webhooks → green tick ✅ showing successful delivery
-
-![GitHub Webhook](screenshots/part2/12-github-webhook.png)
-
----
-
-#### 13. Auto-Triggered Build After git push
-> Make a small code change → `git push` → Jenkins auto-triggers build within seconds
-> Capture the build timestamp matching your push time
-
-![Auto Triggered Build](screenshots/part2/13-auto-triggered-build.png)
+<div align="center">
+    <img width="781" height="194" alt="image" src="https://github.com/user-attachments/assets/d2f0b4f8-12f6-446f-894a-dbcec0d2ccfb" />
+</div>
 
 ---
 
