@@ -2,17 +2,14 @@ pipeline {
     agent any
 
     environment {
-        REPO_DIR = "/home/ubuntu/flask-express-cicd-jenkins-github-webhooks-aws-ec2"
-        APP_DIR  = "${REPO_DIR}/flask-backend"
+        APP_DIR  = "flask-backend"
         VENV_DIR = "${APP_DIR}/venv"
     }
 
     stages {
         stage('Checkout') {
             steps {
-                dir("${REPO_DIR}") {
-                    git branch: 'main', url: 'https://github.com/shubhmate/flask-express-cicd-jenkins-github-webhooks-aws-ec2'
-                }
+                git branch: 'main', url: 'https://github.com/shubhmate/flask-express-cicd-jenkins-github-webhooks-aws-ec2.git'
             }
         }
 
@@ -28,13 +25,17 @@ pipeline {
 
         stage('Test') {
             steps {
-                sh "${VENV_DIR}/bin/python -m pytest tests/ || true"
+                sh "cd ${APP_DIR} && ${VENV_DIR}/bin/python -m pytest tests/ || true"
             }
         }
 
         stage('Deploy') {
             steps {
-                sh "pm2 restart flask-backend || pm2 start ${VENV_DIR}/bin/python --name flask-backend -- ${APP_DIR}/app.py"
+                sh """
+                    pm2 delete flask-backend || true
+                    pm2 start ${APP_DIR}/${VENV_DIR}/bin/python --name flask-backend -- ${APP_DIR}/app.py
+                    pm2 save
+                """
             }
         }
     }
