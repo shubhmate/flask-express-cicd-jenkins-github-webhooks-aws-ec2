@@ -2,21 +2,162 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Flask + Express</title>
   <style>
-    body { font-family: Arial, sans-serif; max-width: 500px; margin: 60px auto; }
-    h2 { margin-bottom: 16px; }
-    input { display: block; width: 100%; padding: 8px 12px; margin: 6px 0; box-sizing: border-box; }
-    button { width: 100%; padding: 10px; margin-top: 10px; background: #007bff; color: #fff; border: none; cursor: pointer; border-radius: 4px; }
-    button:hover { background: #0056b3; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card {
+      background: #1a1d27;
+      border: 1px solid #2d3148;
+      border-radius: 16px;
+      padding: 40px;
+      width: 100%;
+      max-width: 460px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #1e2235;
+      border: 1px solid #2d3148;
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 12px;
+      color: #7c85b3;
+      margin-bottom: 20px;
+    }
+
+    .badge span {
+      width: 7px;
+      height: 7px;
+      background: #4ade80;
+      border-radius: 50%;
+      display: inline-block;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    h2 {
+      font-size: 22px;
+      font-weight: 600;
+      color: #f1f5f9;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: #64748b;
+      margin-bottom: 28px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: #94a3b8;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    input {
+      display: block;
+      width: 100%;
+      padding: 11px 14px;
+      margin-bottom: 16px;
+      background: #0f1117;
+      border: 1px solid #2d3148;
+      border-radius: 8px;
+      color: #e2e8f0;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input::placeholder {
+      color: #3d4466;
+    }
+
+    input:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 4px;
+      background: #6366f1;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      letter-spacing: 0.3px;
+    }
+
+    button:hover {
+      background: #4f46e5;
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    .footer {
+      margin-top: 24px;
+      text-align: center;
+      font-size: 12px;
+      color: #3d4466;
+    }
+
+    .footer span {
+      color: #6366f1;
+    }
   </style>
 </head>
 <body>
-  <h2>Submit a Message to Flask</h2>
-  <form action="/submit" method="POST">
-    <input type="text" name="name" placeholder="Your name" required />
-    <input type="text" name="message" placeholder="Your message" required />
-    <button type="submit">Send to Flask</button>
-  </form>
+  <div class="card">
+    <div class="badge">
+      <span></span> Flask + Express CI/CD
+    </div>
+    <h2>Send a Message</h2>
+    <p class="subtitle">Submit your message to the Flask backend via Express.</p>
+
+    <form action="/submit" method="POST">
+      <label for="name">Your Name</label>
+      <input type="text" id="name" name="name" placeholder="e.g. John Doe" required />
+
+      <label for="message">Message</label>
+      <input type="text" id="message" name="message" placeholder="Type your message here..." required />
+
+      <button type="submit">Send to Flask →</button>
+    </form>
+
+    <p class="footer">Express :3000 → Flask :5000 · Deployed on <span>AWS EC2</span></p>
+  </div>
 </body>
 </html>
