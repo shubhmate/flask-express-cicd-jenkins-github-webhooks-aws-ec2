@@ -4,19 +4,20 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
+                cleanWs()
                 checkout scm
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                sh "cd express-frontend && npm install"
+                sh "cd ${WORKSPACE}/express-frontend && npm install"
             }
         }
 
         stage('Test') {
             steps {
-                sh "cd express-frontend && npm test || true"
+                sh "cd ${WORKSPACE}/express-frontend && npm test || true"
             }
         }
 
@@ -24,7 +25,7 @@ pipeline {
             steps {
                 sh """
                     pm2 delete express-frontend || true
-                    pm2 start app.js --name express-frontend
+                    pm2 start ${WORKSPACE}/express-frontend/app.js --name express-frontend
                     pm2 save
                 """
             }

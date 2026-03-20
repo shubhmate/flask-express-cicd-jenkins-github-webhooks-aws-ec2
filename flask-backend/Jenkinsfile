@@ -2,12 +2,13 @@ pipeline {
     agent any
 
     environment {
-        VENV_DIR = "${WORKSPACE}/venv"
+        VENV_DIR = "${WORKSPACE}/flask-backend/venv"
     }
 
     stages {
         stage('Checkout') {
             steps {
+                cleanWs()
                 checkout scm
             }
         }
@@ -15,7 +16,7 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 sh """
-                    cd flask-backend
+                    cd ${WORKSPACE}/flask-backend
                     python3 -m venv ${VENV_DIR}
                     ${VENV_DIR}/bin/pip install -r requirements.txt
                 """
@@ -24,7 +25,7 @@ pipeline {
 
         stage('Test') {
             steps {
-                sh "cd flask-backend && ${VENV_DIR}/bin/python -m pytest tests/ || true"
+                sh "cd ${WORKSPACE}/flask-backend && ${VENV_DIR}/bin/python -m pytest tests/ || true"
             }
         }
 
@@ -32,7 +33,7 @@ pipeline {
             steps {
                 sh """
                     pm2 delete flask-backend || true
-                    pm2 start ${VENV_DIR}/bin/python -- ${WORKSPACE}/app.py --name flask-backend 
+                    pm2 start ${VENV_DIR}/bin/python --name flask-backend -- ${WORKSPACE}/flask-backend/app.py
                     pm2 save
                 """
             }
